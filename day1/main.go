@@ -22,6 +22,7 @@ func trebuchet() (int, error) {
 	var coordinates []int
 	var total int
 
+	// input file can be found at https://adventofcode.com/2023/day/1
 	file, err := os.Open("./input.txt")
 	if err != nil {
 		return 0, err
