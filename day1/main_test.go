@@ -1,13 +1,14 @@
 package main
 
-import "testing"
+import (
+	"testing"
+)
 
-func TestPrint(t *testing.T) {
-	exp := "day1"
-
-	res := print()
-
-	if res != exp {
-		t.Fatalf("tests[%d] - exp: %q, got %q", 1, exp, res)
+func BenchmarkTrebuchet(b *testing.B) {
+	for i := 0; i < b.N; i++ {
+		_, err := trebuchet()
+		if err != nil {
+			b.Fatal(err)
+		}
 	}
 }
