@@ -6,6 +6,7 @@ import (
 	"os"
 	"regexp"
 	"strconv"
+	"sync"
 )
 
 func main() {
@@ -19,10 +20,11 @@ func main() {
 }
 
 func trebuchet() (int, error) {
-	var coordinates []int
-	var total int
+	var wg sync.WaitGroup
 
-	// input file can be found at https://adventofcode.com/2023/day/1
+	lines := make(chan string)
+	coordinates := make(chan int)
+
 	file, err := os.Open("./input.txt")
 	if err != nil {
 		return 0, err
@@ -33,22 +35,45 @@ func trebuchet() (int, error) {
 	scanner := bufio.NewScanner(file)
 	re := regexp.MustCompile(`\d`)
 
-	for scanner.Scan() {
-		numericChars := re.FindAllString(scanner.Text(), -1)
-		firstDigit := numericChars[0]
-		lastDigit := numericChars[len(numericChars)-1]
+	for i := 0; i < 20; i++ {
+		wg.Add(1)
+		go func() error {
+			defer wg.Done()
 
-		coordinate := fmt.Sprintf("%s%s", firstDigit, lastDigit)
+			for line := range lines {
+				numericChars := re.FindAllString(line, -1)
+				firstDigit := numericChars[0]
+				lastDigit := numericChars[len(numericChars)-1]
 
-		val, err := strconv.Atoi(coordinate)
-		if err != nil {
-			return 0, err
-		}
+				value := fmt.Sprintf("%s%s", firstDigit, lastDigit)
 
-		coordinates = append(coordinates, val)
+				val, err := strconv.Atoi(value)
+				if err != nil {
+					return err
+				}
+
+				coordinates <- val
+
+			}
+
+			return nil
+		}()
 	}
 
-	for _, c := range coordinates {
+	go func() {
+		defer close(lines)
+		for scanner.Scan() {
+			lines <- scanner.Text()
+		}
+	}()
+
+	go func() {
+		wg.Wait()
+		close(coordinates)
+	}()
+
+	var total int
+	for c := range coordinates {
 		total += c
 	}
 
