@@ -20,11 +20,6 @@ func main() {
 }
 
 func trebuchet() (int, error) {
-	var wg sync.WaitGroup
-
-	lines := make(chan string)
-	coordinates := make(chan int)
-
 	file, err := os.Open("./input.txt")
 	if err != nil {
 		return 0, err
@@ -32,15 +27,30 @@ func trebuchet() (int, error) {
 
 	defer file.Close()
 
-	scanner := bufio.NewScanner(file)
 	re := regexp.MustCompile(`\d`)
 
-	for i := 0; i < 20; i++ {
+	lineCh := make(chan string)
+	coordCh := make(chan int)
+
+	var wg sync.WaitGroup
+
+	threadsNo := 20
+
+	scanner := bufio.NewScanner(file)
+
+	go func() {
+		defer close(lineCh)
+		for scanner.Scan() {
+			lineCh <- scanner.Text()
+		}
+	}()
+
+	for i := 0; i < threadsNo; i++ {
 		wg.Add(1)
 		go func() error {
 			defer wg.Done()
 
-			for line := range lines {
+			for line := range lineCh {
 				numericChars := re.FindAllString(line, -1)
 				firstDigit := numericChars[0]
 				lastDigit := numericChars[len(numericChars)-1]
@@ -52,7 +62,7 @@ func trebuchet() (int, error) {
 					return err
 				}
 
-				coordinates <- val
+				coordCh <- val
 
 			}
 
@@ -61,19 +71,12 @@ func trebuchet() (int, error) {
 	}
 
 	go func() {
-		defer close(lines)
-		for scanner.Scan() {
-			lines <- scanner.Text()
-		}
-	}()
-
-	go func() {
 		wg.Wait()
-		close(coordinates)
+		close(coordCh)
 	}()
 
 	var total int
-	for c := range coordinates {
+	for c := range coordCh {
 		total += c
 	}
 
