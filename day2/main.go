@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -20,7 +21,12 @@ func main() {
 }
 
 func cubeConundrum() (int, error) {
-	file, err := os.Open("./input.txt")
+	path, err := filepath.Abs("./input.txt")
+	if err != nil {
+		return 0, err
+	}
+
+	file, err := os.Open(path)
 	if err != nil {
 		return 0, err
 	}
@@ -48,8 +54,8 @@ func cubeConundrum() (int, error) {
 	}
 
 	type data struct {
-		index int
 		line  string
+		index int
 	}
 
 	dataCh := make(chan data)
@@ -64,12 +70,12 @@ func cubeConundrum() (int, error) {
 		index := 0
 		for scanner.Scan() {
 			index++
-			data := data{
+			lineInfo := data{
 				index: index,
 				line:  scanner.Text(),
 			}
 
-			dataCh <- data
+			dataCh <- lineInfo
 		}
 	}()
 

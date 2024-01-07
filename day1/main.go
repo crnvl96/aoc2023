@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"sync"
@@ -20,7 +21,12 @@ func main() {
 }
 
 func trebuchet() (int, error) {
-	file, err := os.Open("./input.txt")
+	path, err := filepath.Abs("./input.txt")
+	if err != nil {
+		return 0, err
+	}
+
+	file, err := os.Open(path)
 	if err != nil {
 		return 0, err
 	}

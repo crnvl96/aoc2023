@@ -12,3 +12,10 @@ func BenchmarkTrebuchet(b *testing.B) {
 		}
 	}
 }
+
+func TestTrebuchet(t *testing.T) {
+	_, err := trebuchet()
+	if err != nil {
+		t.Fatal(err)
+	}
+}
